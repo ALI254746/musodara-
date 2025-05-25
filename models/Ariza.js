@@ -23,7 +23,13 @@ const ArizaSchema = new mongoose.Schema(
     status: String,
     location: String,
     image: ImageSchema, // bu yerda image nested schema sifatida
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
+    isLikedByCurrentUser: { type: Boolean, default: false },
   },
+
   { timestamps: true }
 );
 

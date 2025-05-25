@@ -135,6 +135,8 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
                       primary={notif.message}
                       secondary={new Date(notif.createdAt).toLocaleString()}
                     />
+
+                    {/* Do'stlik so'rovi bo'lsa tugmalar chiqadi */}
                     {notif.type === "friend_request" && (
                       <Stack direction="row" spacing={1} mt={1}>
                         <Button
@@ -157,6 +159,19 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
                         </Button>
                       </Stack>
                     )}
+
+                    {/* Like turi uchun qo'shimcha matn (ixtiyoriy) */}
+                    {notif.type === "like" && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                      >
+                        Sizning postlaringizdan biriga like bosildi.
+                      </Typography>
+                    )}
+
+                    {/* Agar boshqa turdagi xabarlar ham bo‘lsa, shu yerga qo‘shib ketish mumkin */}
                   </Box>
                 </ListItem>
               ))}

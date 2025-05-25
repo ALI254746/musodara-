@@ -1,4 +1,7 @@
+// models/User.js
 import mongoose from "mongoose";
+import { type } from "os";
+import { string } from "yup";
 
 const userSchema = new mongoose.Schema(
   {
@@ -9,21 +12,16 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-
     password: {
       type: String,
       required: true,
     },
-
     points: { type: Number, default: 0 },
-
     avatar: { type: String, default: "" },
-
     bio: {
       type: String, // foydalanuvchi o‘zining bio sini yozadi
       default: "",
     },
-
     // ✅ Do‘stlar ro‘yxati
     friends: [
       {
@@ -31,8 +29,6 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-
-    // ✅ Kelgan do‘stlik so‘rovlari
     friendRequests: [
       {
         from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -40,17 +36,15 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
-    // ✅ Bildirishnomalar (like, comment, friend_request)
     notifications: [
       {
         type: {
           type: String,
-          enum: ["friend_request", "comment", "like"],
+          enum: ["friend_request", "like", "comment", "new-ariza"],
           required: true,
         },
         message: { type: String, required: true },
         from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post" }, // comment yoki like qilingan post
         createdAt: { type: Date, default: Date.now },
         read: { type: Boolean, default: false },
       },

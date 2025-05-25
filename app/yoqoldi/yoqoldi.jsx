@@ -1,90 +1,71 @@
-"use client";
-import React, { useEffect, useState } from "react";
+"use client"; //yoqldi.jsx
+import CommentDrawer from "./commentDrawer";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Container,
+  TextField,
   Grid,
   Card,
   CardMedia,
   CardContent,
   Typography,
   Button,
-  Drawer,
-  IconButton,
-  Avatar,
-  TextField,
-  Divider,
-  ToggleButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
   ToggleButtonGroup,
-  useTheme,
+  ToggleButton,
 } from "@mui/material";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import CommentIcon from "@mui/icons-material/Comment";
-import CloseIcon from "@mui/icons-material/Close";
-
-function timeAgo(date) {
-  const now = new Date();
-  const past = new Date(date);
-  const diff = Math.floor((now - past) / 1000);
-  if (diff < 60) return `${diff} sekund oldin`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} minut oldin`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} soat oldin`;
-  return `${Math.floor(diff / 86400)} kun oldin`;
-}
-
+import ChatIcon from "@mui/icons-material/Chat";
+import InfoIcon from "@mui/icons-material/Info"; // Detail uchun
 export default function LostItemsPage() {
-  const theme = useTheme();
   const [items, setItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [likes, setLikes] = useState({});
-  const [commentsCount, setCommentsCount] = useState({});
-  const [commentsData, setCommentsData] = useState({});
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentItemId, setCurrentItemId] = useState(null);
-  const [newCommentText, setNewCommentText] = useState("");
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("all");
-
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentsData, setCommentsData] = useState({});
+  // 🔁 API'dan ma'lumotni olish
   useEffect(() => {
     const fetchItems = async () => {
       try {
         const res = await fetch("/api/ariza?status=yoqoldi");
         const data = await res.json();
-        const mappedData = data.map((item) => {
-          const id = item._id;
-          return {
-            id,
-            title: item.itemType,
-            description: item.itemDescription,
-            location: item.location,
-            dateLost: item.date,
-            image: item.image?.data?.data
-              ? `data:${item.image.type};base64,${Buffer.from(
-                  item.image.data.data
-                ).toString("base64")}`
-              : "/images/placeholder.png",
-          };
-        });
+        console.log(data);
+        const mappedData = data.map((item) => ({
+          id: item._id,
+          fullName: item.fullName,
+          title: item.itemType,
+          description: item.itemDescription,
+          location: item.location,
+          dateLost: item.date,
+          image: item.image?.data?.data
+            ? `data:${item.image.type};base64,${Buffer.from(
+                item.image.data.data
+              ).toString("base64")}`
+            : "/images/placeholder.png", // agar rasm yo‘q bo‘lsa
+          contactInfo: `Telefon: ${item.phone}`,
+          likeCount: item.likeCount,
+          isLiked: item.isLikedByCurrentUser,
+        }));
 
         setItems(mappedData);
-        const initLikes = {},
-          initComments = {},
-          initCommentsData = {};
-        mappedData.forEach((item) => {
-          initLikes[item.id] = 0;
-          initComments[item.id] = 0;
-          initCommentsData[item.id] = [];
-        });
-        setLikes(initLikes);
-        setCommentsCount(initComments);
-        setCommentsData(initCommentsData);
       } catch (error) {
-        console.error("Xatolik:", error);
+        console.error("Ma'lumot olishda xatolik:", error);
       }
     };
 
     fetchItems();
   }, []);
 
+  // Vaqt bo‘yicha filtrlash
   const filterItemsByTime = (items) => {
     const now = new Date();
     return items.filter((item) => {
@@ -117,70 +98,131 @@ export default function LostItemsPage() {
   );
 
   const handleTimeFilterChange = (event, newFilter) => {
-    if (newFilter) setSelectedTimeFilter(newFilter);
+    setSelectedTimeFilter(newFilter);
   };
 
-  const openCommentsDrawer = (itemId) => {
-    setCurrentItemId(itemId);
-    setDrawerOpen(true);
+  const handleDetailOpen = (item) => {
+    setSelectedItem(item);
+    setOpenDialog(true);
   };
 
-  const closeCommentsDrawer = () => {
-    setDrawerOpen(false);
-    setCurrentItemId(null);
-    setNewCommentText("");
+  const handleDetailClose = () => {
+    setOpenDialog(false);
+    setSelectedItem(null);
   };
 
-  const handleAddComment = () => {
-    if (!newCommentText.trim()) return;
-    const comment = {
-      id: Date.now(),
-      user: "Foydalanuvchi",
-      text: newCommentText.trim(),
-      createdAt: new Date().toISOString(),
-      likes: 0,
-    };
-    setCommentsData((prev) => ({
-      ...prev,
-      [currentItemId]: [...prev[currentItemId], comment],
-    }));
-    setCommentsCount((prev) => ({
-      ...prev,
-      [currentItemId]: prev[currentItemId] + 1,
-    }));
-    setNewCommentText("");
+  const handleContact = (item) => {
+    alert(`Kontakt ma’lumotlari:\n${item.contactInfo}`);
   };
+  //like yuborilishi
+  const handleLike = async (itemId) => {
+    try {
+      const response = await fetch("/api/likes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ postId: itemId }),
+      });
 
-  const handleLikeComment = (commentId) => {
-    setCommentsData((prev) => ({
-      ...prev,
-      [currentItemId]: prev[currentItemId].map((c) =>
-        c.id === commentId ? { ...c, likes: c.likes + 1 } : c
-      ),
-    }));
+      const data = await response.json();
+
+      if (response.ok) {
+        // 🔁 likeCount va isLiked holatini yangilaymiz
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.id === itemId
+              ? {
+                  ...item,
+                  likeCount: data.likeCount,
+                  isLiked: data.isLiked,
+                }
+              : item
+          )
+        );
+      } else {
+        console.error("Xatolik:", data.message || data.error);
+      }
+    } catch (error) {
+      console.log("Server xatolik:", error);
+    }
+  };
+  const handleCommentSubmit = async (text, itemId) => {
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          postId: itemId,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Komment yuborishda xatolik");
+      }
+
+      const data = await res.json();
+
+      // Optional: userga bildirishnoma berish
+      console.log("Comment yuborildi:", data);
+      const newComments = await fetchComments(itemId);
+      setComments(newComments);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+  const fetchComments = useCallback(async (itemId) => {
+    try {
+      const res = await fetch(`/api/comments?postId=${itemId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Kommentlarni olishda xatolik yuz berdi");
+      }
+
+      const data = await res.json();
+      setCommentsData((prev) => ({
+        ...prev,
+        [itemId]: data,
+      }));
+      console.log("Kommentlar:", data);
+      return data; // agar komponentda ishlatmoqchi bo‘lsangiz
+    } catch (error) {
+      console.log(error.message);
+    }
+  }, []);
+  // Comment drawer ochilganda commentlarni yuklash
+  const openComments = async (item) => {
+    setSelectedItem(item);
+    await fetchComments(item.id);
+    setCommentOpen(true);
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography
-        variant="h4"
-        textAlign="center"
-        fontWeight="bold"
-        gutterBottom
-        color="primary"
-      >
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom textAlign="center">
         Yo'qolgan buyumlar
       </Typography>
 
-      <TextField
-        fullWidth
-        variant="outlined"
-        sx={{ mb: 3, backgroundColor: "#f9f9f9" }}
-        placeholder="Qidiruv..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
+      {/* Qidiruv */}
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
+        <TextField
+          label="Qidirish..."
+          variant="outlined"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ width: { xs: "100%", sm: 400 } }}
+        />
+      </Box>
 
+      {/* Vaqt bo‘yicha filter */}
       <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
         <ToggleButtonGroup
           value={selectedTimeFilter}
@@ -195,158 +237,145 @@ export default function LostItemsPage() {
         </ToggleButtonGroup>
       </Box>
 
-      <Grid container spacing={3}>
+      {/* Buyumlar ro'yxati */}
+      <Grid container spacing={4} justifyContent="center">
         {filteredItems.map((item) => (
-          <Grid item xs={12} sm={6} md={4} key={item.id}>
+          <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
             <Card
               sx={{
+                height: "100%",
                 display: "flex",
-                maxWidth: "178px",
                 flexDirection: "column",
-                borderRadius: 3,
-                boxShadow: 3,
-                transition: "0.3s",
-                "&:hover": { boxShadow: 6 },
+                justifyContent: "space-between",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  transform: "scale(1.03)",
+                  boxShadow: 6,
+                },
+                width: "100%",
+                maxWidth: 345,
               }}
             >
               <CardMedia
                 component="img"
-                height="180"
                 image={item.image}
                 alt={item.title}
+                height="200"
+                sx={{ objectFit: "cover" }}
               />
-              <CardContent>
+              <CardContent sx={{ flexGrow: 1 }}>
                 <Typography variant="h6" fontWeight="bold">
+                  {/* <PersonIcon />
+                  <FaceIcon /> */}
+
+                  {item.fullName}
+                </Typography>
+                <Typography gutterBottom variant="h6">
                   {item.title}
                 </Typography>
-                <Divider color="primary" />
-                <Typography variant="body2" mt={1} color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  mb={1}
+                  noWrap
+                >
                   {item.description}
                 </Typography>
-                <Typography variant="body2" mt={1}>
+                <Typography variant="body2" color="text.secondary" mb={0.5}>
                   <strong>Joy:</strong> {item.location}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" color="text.secondary">
                   <strong>Sana:</strong> {item.dateLost}
                 </Typography>
-                <Divider color="primary" />
               </CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  px: 2,
-                  pb: 2,
-                }}
-              >
+
+              <Box sx={{ p: 2, display: "flex", gap: 1 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  onClick={() => handleDetailOpen(item)}
+                  startIcon={<InfoIcon />}
+                ></Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  fullWidth
+                  onClick={() => handleContact(item)}
+                  startIcon={<ChatIcon />}
+                ></Button>
+                <Button
+                  size="small"
+                  variant={item.isLiked ? "contained" : "outlined"}
+                  sx={{ borderRadius: 20 }}
+                  onClick={() => handleLike(item.id)}
+                  startIcon={<ThumbUpIcon />}
+                >
+                  {" "}
+                  <Typography ml={0.5}>{item.likeCount}</Typography>
+                </Button>
                 <Button
                   size="small"
                   variant="contained"
                   color="primary"
                   sx={{ borderRadius: 20 }}
-                  onClick={() => openCommentsDrawer(item.id)}
+                  onClick={() => {
+                    openComments(item);
+                    setCommentOpen(true);
+                  }}
                   startIcon={<CommentIcon />}
-                >
-                  ({commentsCount[item.id]})
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  sx={{ borderRadius: 20 }}
-                  onClick={() =>
-                    setLikes((prev) => ({
-                      ...prev,
-                      [item.id]: prev[item.id] + 1,
-                    }))
-                  }
-                  startIcon={<ThumbUpIcon />}
-                >
-                  ({likes[item.id]})
-                </Button>
+                ></Button>
               </Box>
             </Card>
           </Grid>
         ))}
-      </Grid>
 
-      <Drawer
-        anchor="bottom"
-        open={drawerOpen}
-        onClose={closeCommentsDrawer}
-        PaperProps={{
-          sx: {
-            height: "60vh",
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            p: 3,
-            backgroundColor: "#fafafa",
-          },
-        }}
-      >
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <Typography variant="h6" fontWeight="bold">
-            Izohlar
+        {filteredItems.length === 0 && (
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 4 }}>
+            Hech narsa topilmadi.
           </Typography>
-          <IconButton onClick={closeCommentsDrawer}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-
-        <Box sx={{ overflowY: "auto", maxHeight: "calc(60vh - 160px)", mb: 2 }}>
-          {currentItemId && commentsData[currentItemId]?.length > 0 ? (
-            commentsData[currentItemId].map((comment) => (
+        )}
+      </Grid>
+      <CommentDrawer
+        open={commentOpen}
+        onClose={() => setCommentOpen(false)}
+        onSubmit={(text) => handleCommentSubmit(text, selectedItem?.id)}
+        currentItemId={selectedItem?.id}
+        commentsData={commentsData}
+        fetchComments={fetchComments}
+      />
+      {/* Dialog */}
+      <Dialog open={openDialog} onClose={handleDetailClose}>
+        <DialogTitle>{selectedItem?.title}</DialogTitle>
+        <DialogContent>
+          {selectedItem && (
+            <>
               <Box
-                key={comment.id}
+                component="img"
+                src={selectedItem.image}
+                alt={selectedItem.title}
                 sx={{
+                  width: "100%",
+                  height: 200,
+                  objectFit: "cover",
+                  borderRadius: 1,
                   mb: 2,
-                  p: 2,
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  backgroundColor: "#fff",
                 }}
-              >
-                <Avatar sx={{ mr: 2 }}>{comment.user[0]}</Avatar>
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="body2" fontWeight="bold">
-                    {comment.user}
-                  </Typography>
-                  <Typography variant="body2" mb={0.5}>
-                    {comment.text}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {timeAgo(comment.createdAt)}
-                  </Typography>
-                </Box>
-                <IconButton onClick={() => handleLikeComment(comment.id)}>
-                  <ThumbUpIcon fontSize="small" />
-                  <Typography variant="caption" sx={{ ml: 0.5 }}>
-                    {comment.likes}
-                  </Typography>
-                </IconButton>
-              </Box>
-            ))
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              Hozircha izohlar yo'q.
-            </Typography>
+              />
+              <DialogContentText>{selectedItem.description}</DialogContentText>
+              <DialogContentText sx={{ mt: 1 }}>
+                <strong>Joy:</strong> {selectedItem.location}
+              </DialogContentText>
+              <DialogContentText>
+                <strong>Sana:</strong> {selectedItem.dateLost}
+              </DialogContentText>
+            </>
           )}
-        </Box>
-
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Izoh yozing..."
-            value={newCommentText}
-            onChange={(e) => setNewCommentText(e.target.value)}
-          />
-          <Button variant="contained" onClick={handleAddComment}>
-            Yuborish
-          </Button>
-        </Box>
-      </Drawer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDetailClose}>Yopish</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

@@ -68,6 +68,42 @@ export default function LostItemsPage() {
               : "/images/placeholder.png",
           };
         });
+        const handleAddComment = async () => {
+          if (!newCommentText.trim()) return;
+
+          const comment = {
+            id: Date.now(),
+            user: "Foydalanuvchi",
+            text: newCommentText.trim(),
+            createdAt: new Date().toISOString(),
+            likes: 0,
+          };
+
+          setCommentsData((prev) => ({
+            ...prev,
+            [currentItemId]: [...prev[currentItemId], comment],
+          }));
+          setCommentsCount((prev) => ({
+            ...prev,
+            [currentItemId]: prev[currentItemId] + 1,
+          }));
+          setNewCommentText("");
+
+          // Notification yuborish
+          try {
+            await fetch("/api/notify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                toUserId: "postOwnerId", // bu yerda haqiqiy ID bo‘lishi kerak
+                type: "comment",
+                message: `Foydalanuvchi sizning postga izoh qoldirdi`,
+              }),
+            });
+          } catch (err) {
+            console.error("Xabar yuborishda xatolik:", err);
+          }
+        };
 
         setItems(mappedData);
         const initLikes = {},
