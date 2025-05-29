@@ -52,7 +52,7 @@ export async function POST(request) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       userId = decoded.id;
-    } catch (err) {
+    } catch {
       return new Response(JSON.stringify({ error: "Token yaroqsiz" }), {
         status: 401,
       });

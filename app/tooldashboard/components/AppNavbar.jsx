@@ -11,12 +11,8 @@ const AppNavbar = () => {
   const [profileDrawerOpen, setProfileDrawerOpen] = React.useState(false);
   const [msgAnchorEl, setMsgAnchorEl] = React.useState(null);
   const [notAnchorEl, setNotAnchorEl] = React.useState(null);
-  const handleDrawerOpen = () => setDrawerOpen(true);
-  const handleDrawerClose = () => setDrawerOpen(false);
 
-  const handleMsgClick = (event) => setMsgAnchorEl(event.currentTarget);
-  const handleNotClick = (event) => setNotAnchorEl(event.currentTarget);
-  const handleProfileOpen = (event) => setProfileAnchorEl(event.currentTarget);
+  const handleDrawerClose = () => setDrawerOpen(false);
 
   return (
     <>

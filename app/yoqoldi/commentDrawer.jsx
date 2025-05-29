@@ -5,7 +5,6 @@ import {
   Typography,
   TextField,
   Button,
-  Stack,
   IconButton,
   Avatar,
 } from "@mui/material";
@@ -22,7 +21,6 @@ const CommentDrawer = ({
   currentItemId,
   commentsData = {},
   fetchComments,
-  postId,
 }) => {
   const [newCommentText, setNewCommentText] = useState("");
   // ⛳ MUHIM: commentlarni drawer ochilganida yuklash

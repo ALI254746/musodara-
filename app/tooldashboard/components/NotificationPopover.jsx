@@ -140,9 +140,6 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
     if (hours < 24) return `${hours} soat oldin`;
     return `${days} kun oldin`;
   };
-  const unreadCount = notifications.filter(
-    (notif) => notif.read === false
-  ).length;
 
   return (
     <Popover

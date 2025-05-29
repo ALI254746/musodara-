@@ -20,7 +20,7 @@ export async function POST(req) {
   let userData;
   try {
     userData = jwt.verify(token, process.env.JWT_SECRET);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ message: "Invalid token" }, { status: 403 });
   }
 

@@ -25,7 +25,7 @@ export async function POST(req) {
     // 🔐 Tokenni tekshirish va foydalanuvchini aniqlash
     const decoded = jwt.verify(token, process.env.JWT_SECRET); // ⚠️ `.env` faylda `JWT_SECRET` bo‘lishi shart
     currentUser = await User.findById(decoded.id);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, message: "Token noto‘g‘ri yoki muddati tugagan" },
       { status: 401 }

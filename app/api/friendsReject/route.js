@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import { getSessionUser } from "@/lib/auth";
+import { signToken } from "@/lib/auth";
 
 export async function POST(req) {
   await dbConnect();
   const { notificationId } = await req.json();
-  const currentUser = await getSessionUser(req);
+  const currentUser = await signToken(req);
 
   if (!currentUser || !notificationId) {
     return NextResponse.json(

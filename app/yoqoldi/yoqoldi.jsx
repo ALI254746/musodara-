@@ -21,19 +21,12 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from "@mui/material";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import EventIcon from "@mui/icons-material/Event";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import FavoriteIcon from "@mui/icons-material/Favorite";
+
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import PhoneIcon from "@mui/icons-material/Phone";
 
-import FeedbackIcon from "@mui/icons-material/Feedback";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
-import CommentIcon from "@mui/icons-material/Comment";
-import ChatIcon from "@mui/icons-material/Chat";
 import InfoIcon from "@mui/icons-material/Info";
 import FaceIcon from "@mui/icons-material/Face";
 import LocationOnIcon from "@mui/icons-material/LocationOn"; // Detail uchun

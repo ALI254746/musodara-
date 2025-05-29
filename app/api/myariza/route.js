@@ -23,7 +23,7 @@ export async function GET(request) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       userId = decoded.id;
       console.log("user id", userId);
-    } catch (err) {
+    } catch {
       return NextResponse.json({ error: "Token yaroqsiz" }, { status: 401 });
     }
 

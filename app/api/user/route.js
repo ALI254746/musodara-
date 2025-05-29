@@ -35,7 +35,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ user });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Token noto‘g‘ri" }, { status: 401 });
   }
 }
