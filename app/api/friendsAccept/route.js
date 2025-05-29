@@ -55,7 +55,7 @@ export async function POST(req) {
       message: "Do‘stlik qabul qilindi",
     });
   } catch (error) {
-    console.error("Qabul qilishda xatolik:", error);
+    console.log("Qabul qilishda xatolik:", error);
     return NextResponse.json(
       { success: false, message: "Server xatoligi" },
       { status: 500 }

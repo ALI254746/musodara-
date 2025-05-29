@@ -74,7 +74,7 @@ export async function POST(req) {
   console.log("text", text);
   try {
     const comment = await Comment.create({
-      userId: userData.id,
+      userId: userData.id || null,
       postId,
       text,
     });

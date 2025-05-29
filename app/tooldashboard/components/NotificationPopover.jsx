@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Popover,
   Typography,
@@ -9,6 +10,8 @@ import {
   Button,
   Stack,
   CircularProgress,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 
@@ -19,6 +22,7 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
+  const [tabIndex, setTabIndex] = useState(0);
 
   // ✅ Foydalanuvchi ID ni olish
   const fetchUserId = async () => {
@@ -31,10 +35,8 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
     }
   };
 
-  // ✅ Notificationni o‘qilgan qilish
+  // ✅ Notificationlarni o‘qilgan qilish
   const markAsRead = async (notificationId) => {
-    console.log("Notif ID:", notificationId);
-    console.log("User ID:", userId);
     if (!userId) return;
     try {
       await fetch(`/api/notification/${notificationId}`, {
@@ -55,9 +57,7 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
     try {
       const res = await fetch("/api/friendslist");
       const data = await res.json();
-      const unread = (data.notifications || []).filter((notif) => !notif.read);
-      unread.forEach((notif) => markAsRead(notif._id));
-      setNotifications(unread);
+      setNotifications(data.notifications || []);
     } catch (error) {
       console.error("Bildirishnomalarni olishda xatolik:", error);
     } finally {
@@ -65,19 +65,21 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
     }
   };
 
-  // ✅ useEffect faqat ochilganda va userId mavjud bo‘lsa ishga tushadi
+  // ✅ Faqat ochilganda userId ni olib kelish
   useEffect(() => {
     if (open) {
-      fetchUserId(); // userId ni olib kelamiz
+      fetchUserId();
     }
   }, [open]);
 
+  // ✅ User ID bor bo‘lsa, bildirishnomalarni olib kelish
   useEffect(() => {
     if (userId) {
-      fetchNotifications(); // faqat userId bo‘lsa notiflarni ol
+      fetchNotifications();
     }
   }, [userId]);
 
+  // ✅ Do‘stlikni qabul qilish
   const handleAccept = async (senderId, notificationId) => {
     try {
       await fetch("/api/friendsAccept", {
@@ -91,6 +93,7 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
     }
   };
 
+  // ✅ Rad etish
   const handleReject = async (notificationId) => {
     try {
       await fetch("/api/friendsReject", {
@@ -103,6 +106,43 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
       console.error("Rad etishda xatolik:", error);
     }
   };
+
+  // ✅ Tab bo‘yicha filter
+  useEffect(() => {
+    if (tabIndex === 1 && notifications.length > 0) {
+      notifications
+        .filter((notif) => !notif.read) // faqat o‘qilmaganlar
+        .forEach((notif) => markAsRead(notif._id));
+    }
+  }, [tabIndex, notifications]); // tabIndex yoki notifications o‘zgarsa ishlaydi
+  // ⬆️ JSX'dan oldin, hooksdan keyin joylashtiring
+  const filteredNotifications = notifications.filter((notif) => {
+    const createdAt = new Date(notif.createdAt);
+    const now = new Date();
+    const timeDiff = now.getTime() - createdAt.getTime();
+    const isLast24Hours = timeDiff <= 24 * 60 * 60 * 1000; // 24 soat ichida
+
+    if (tabIndex === 0) return notif.read === true && isLast24Hours; // All tab
+    if (tabIndex === 1) return notif.read === false; // Unread tab
+    return true;
+  });
+  const getTimeAgo = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now - date;
+    const seconds = Math.floor(diffMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return `${seconds} soniya oldin`;
+    if (minutes < 60) return `${minutes} daqiqa oldin`;
+    if (hours < 24) return `${hours} soat oldin`;
+    return `${days} kun oldin`;
+  };
+  const unreadCount = notifications.filter(
+    (notif) => notif.read === false
+  ).length;
 
   return (
     <Popover
@@ -118,63 +158,64 @@ const NotificationPopover = ({ anchorEl, onClose }) => {
           Bildirishnomalar
         </Typography>
 
+        <Tabs
+          value={tabIndex}
+          onChange={(_, i) => setTabIndex(i)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ mb: 2 }}
+        >
+          <Tab label="All" />
+          <Tab label="Unread" />
+        </Tabs>
+
         {loading ? (
           <Box display="flex" justifyContent="center" p={2}>
             <CircularProgress />
           </Box>
-        ) : notifications.length === 0 ? (
+        ) : filteredNotifications.length === 0 ? (
           <Typography>Bildirishnoma mavjud emas</Typography>
         ) : (
           <List>
-            {notifications
-              .filter((notif) => !notif.read)
-              .map((notif) => (
-                <ListItem key={notif._id} alignItems="flex-start">
-                  <Box width="100%">
-                    <ListItemText
-                      primary={notif.message}
-                      secondary={new Date(notif.createdAt).toLocaleString()}
-                    />
+            {filteredNotifications.map((notif) => (
+              <ListItem key={notif._id} alignItems="flex-start">
+                <Box width="100%">
+                  <ListItemText
+                    primary={
+                      notif.type === "friend_request"
+                        ? `${notif.from.name} sizga do‘stlik so‘rovi yubordi.`
+                        : notif.type === "like"
+                        ? `${notif.from.name} sizning postingizni yoqtirdi.`
+                        : notif.type === "comment"
+                        ? `${notif.from.name} sizning postingizga izoh qoldirdi.`
+                        : notif.message
+                    }
+                    secondary={getTimeAgo(notif.createdAt)}
+                  />
 
-                    {/* Do'stlik so'rovi bo'lsa tugmalar chiqadi */}
-                    {notif.type === "friend_request" && (
-                      <Stack direction="row" spacing={1} mt={1}>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="success"
-                          onClick={() =>
-                            handleAccept(notif.from._id, notif._id)
-                          }
-                        >
-                          Qabul qilish
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          onClick={() => handleReject(notif._id)}
-                        >
-                          Rad etish
-                        </Button>
-                      </Stack>
-                    )}
-
-                    {/* Like turi uchun qo'shimcha matn (ixtiyoriy) */}
-                    {notif.type === "like" && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mt: 1 }}
+                  {notif.type === "friend_request" && (
+                    <Stack direction="row" spacing={1} mt={1}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="success"
+                        onClick={() => handleAccept(notif.from._id, notif._id)}
                       >
-                        Sizning postlaringizdan biriga like bosildi.
-                      </Typography>
-                    )}
-
-                    {/* Agar boshqa turdagi xabarlar ham bo‘lsa, shu yerga qo‘shib ketish mumkin */}
-                  </Box>
-                </ListItem>
-              ))}
+                        Qabul qilish
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleReject(notif._id)}
+                      >
+                        Rad etish
+                      </Button>
+                    </Stack>
+                  )}
+                </Box>
+              </ListItem>
+            ))}
           </List>
         )}
       </Box>

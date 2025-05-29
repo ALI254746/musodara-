@@ -15,7 +15,7 @@ export async function PUT(request, { params }) {
       { _id: userId, "notifications._id": notificationId },
       {
         $set: {
-          "notifications.$.read": true,
+          "notifications.$.read": true, // O'qilgan deb belgilash
         },
       }
     );

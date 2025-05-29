@@ -1,130 +1,99 @@
-"use client";
-import React, { useEffect, useState } from "react";
+"use client"; //yoqldi.jsx
+import CommentDrawer from "./commentDrawer";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Container,
+  TextField,
   Grid,
   Card,
   CardMedia,
   CardContent,
+  Skeleton,
   Typography,
   Button,
-  Drawer,
-  IconButton,
-  Avatar,
-  TextField,
   Divider,
-  ToggleButton,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
   ToggleButtonGroup,
-  useTheme,
+  ToggleButton,
 } from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
+
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import EventIcon from "@mui/icons-material/Event";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import PhoneIcon from "@mui/icons-material/Phone";
+
+import InfoIcon from "@mui/icons-material/Info";
 import FaceIcon from "@mui/icons-material/Face";
-import BadgeIcon from "@mui/icons-material/Badge";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
-import CommentIcon from "@mui/icons-material/Comment";
-import CloseIcon from "@mui/icons-material/Close";
-
-function timeAgo(date) {
-  const now = new Date();
-  const past = new Date(date);
-  const diff = Math.floor((now - past) / 1000);
-  if (diff < 60) return `${diff} sekund oldin`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} minut oldin`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} soat oldin`;
-  return `${Math.floor(diff / 86400)} kun oldin`;
-}
-
+import LocationOnIcon from "@mui/icons-material/LocationOn"; // Detail uchun
 export default function LostItemsPage() {
-  const theme = useTheme();
   const [items, setItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [likes, setLikes] = useState({});
-  const [commentsCount, setCommentsCount] = useState({});
-  const [commentsData, setCommentsData] = useState({});
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentItemId, setCurrentItemId] = useState(null);
-  const [newCommentText, setNewCommentText] = useState("");
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("all");
-
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentsData, setCommentsData] = useState({});
+  const [loading, setLoading] = useState(true);
+  // 🔁 API'dan ma'lumotni olish
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await fetch("/api/ariza?status=topildi");
-        const data = await res.json();
-        const mappedData = data.map((item) => {
-          const id = item._id;
-          return {
-            id,
-            fullName: item.fullName,
-            title: item.itemType,
-            description: item.itemDescription,
-            location: item.location,
-            dateLost: item.date,
-            image: item.image?.data?.data
-              ? `data:${item.image.type};base64,${Buffer.from(
-                  item.image.data.data
-                ).toString("base64")}`
-              : "/images/placeholder.png",
-          };
+        setLoading(true);
+        const res = await fetch("/api/ariza?status=topildi", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
-        const handleAddComment = async () => {
-          if (!newCommentText.trim()) return;
-
-          const comment = {
-            id: Date.now(),
-            user: "Foydalanuvchi",
-            text: newCommentText.trim(),
-            createdAt: new Date().toISOString(),
-            likes: 0,
-          };
-
-          setCommentsData((prev) => ({
-            ...prev,
-            [currentItemId]: [...prev[currentItemId], comment],
-          }));
-          setCommentsCount((prev) => ({
-            ...prev,
-            [currentItemId]: prev[currentItemId] + 1,
-          }));
-          setNewCommentText("");
-
-          // Notification yuborish
-          try {
-            await fetch("/api/notify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                toUserId: "postOwnerId", // bu yerda haqiqiy ID bo‘lishi kerak
-                type: "comment",
-                message: `Foydalanuvchi sizning postga izoh qoldirdi`,
-              }),
-            });
-          } catch (err) {
-            console.error("Xabar yuborishda xatolik:", err);
-          }
-        };
+        if (!res.ok) {
+          throw new Error("Ma'lumotlarni olishda xatolik yuz berdi");
+        }
+        // Ma'lumotlarni JSON formatiga o‘girish
+        // console.log("API dan olingan ma'lumotlar:", res);
+        const data = await res.json();
+        console.log(data);
+        const mappedData = data.map((item) => ({
+          id: item._id,
+          fullName: item.fullName,
+          title: item.itemType,
+          description: item.itemDescription,
+          region: item.region,
+          district: item.district,
+          location: item.location,
+          dateLost: item.date,
+          image: item.image?.data?.data
+            ? `data:${item.image.type};base64,${Buffer.from(
+                item.image.data.data
+              ).toString("base64")}`
+            : "/images/placeholder.png", // agar rasm yo‘q bo‘lsa
+          contactInfo: `Telefon: ${item.phone}`,
+          likeCount: item.likeCount,
+          isLiked: item.isLikedByCurrentUser,
+        }));
 
         setItems(mappedData);
-        const initLikes = {},
-          initComments = {},
-          initCommentsData = {};
-        mappedData.forEach((item) => {
-          initLikes[item.id] = 0;
-          initComments[item.id] = 0;
-          initCommentsData[item.id] = [];
-        });
-        setLikes(initLikes);
-        setCommentsCount(initComments);
-        setCommentsData(initCommentsData);
+        setLoading(false);
       } catch (error) {
-        console.error("Xatolik:", error);
+        setLoading(false);
+        console.error("Ma'lumot olishda xatolik:", error);
       }
     };
 
     fetchItems();
   }, []);
 
+  // Vaqt bo‘yicha filtrlash
   const filterItemsByTime = (items) => {
     const now = new Date();
     return items.filter((item) => {
@@ -157,70 +126,167 @@ export default function LostItemsPage() {
   );
 
   const handleTimeFilterChange = (event, newFilter) => {
-    if (newFilter) setSelectedTimeFilter(newFilter);
+    setSelectedTimeFilter(newFilter);
   };
 
-  const openCommentsDrawer = (itemId) => {
-    setCurrentItemId(itemId);
-    setDrawerOpen(true);
+  const handleDetailOpen = (item) => {
+    setSelectedItem(item);
+    setOpenDialog(true);
   };
 
-  const closeCommentsDrawer = () => {
-    setDrawerOpen(false);
-    setCurrentItemId(null);
-    setNewCommentText("");
+  const handleDetailClose = () => {
+    setOpenDialog(false);
+    setSelectedItem(null);
   };
 
-  const handleAddComment = () => {
-    if (!newCommentText.trim()) return;
-    const comment = {
-      id: Date.now(),
-      user: "Foydalanuvchi",
-      text: newCommentText.trim(),
-      createdAt: new Date().toISOString(),
-      likes: 0,
-    };
-    setCommentsData((prev) => ({
-      ...prev,
-      [currentItemId]: [...prev[currentItemId], comment],
-    }));
-    setCommentsCount((prev) => ({
-      ...prev,
-      [currentItemId]: prev[currentItemId] + 1,
-    }));
-    setNewCommentText("");
+  const handleContact = (item) => {
+    alert(`Kontakt ma’lumotlari:\n${item.contactInfo}`);
+  };
+  //like yuborilishi
+  const handleLike = async (itemId) => {
+    try {
+      const response = await fetch("/api/likes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ postId: itemId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // 🔁 likeCount va isLiked holatini yangilaymiz
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.id === itemId
+              ? {
+                  ...item,
+                  likeCount: data.likeCount,
+                  isLiked: data.isLiked,
+                }
+              : item
+          )
+        );
+      } else {
+        console.error("Xatolik:", data.message || data.error);
+      }
+    } catch (error) {
+      console.log("Server xatolik:", error);
+    }
+  };
+  const handleCommentSubmit = async (text, itemId) => {
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          postId: itemId,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Komment yuborishda xatolik");
+      }
+
+      const data = await res.json();
+
+      // Optional: userga bildirishnoma berish
+      console.log("Comment yuborildi:", data);
+      const newComments = await fetchComments(itemId);
+      setComments(newComments);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+  const fetchComments = useCallback(async (itemId) => {
+    try {
+      const res = await fetch(`/api/comments?postId=${itemId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Kommentlarni olishda xatolik yuz berdi");
+      }
+
+      const data = await res.json();
+      setCommentsData((prev) => ({
+        ...prev,
+        [itemId]: data,
+      }));
+      console.log("Kommentlar:", data);
+      return data; // agar komponentda ishlatmoqchi bo‘lsangiz
+    } catch (error) {
+      console.log(error.message);
+    }
+  }, []);
+  // Comment drawer ochilganda commentlarni yuklash
+  const openComments = async (item) => {
+    setSelectedItem(item);
+    await fetchComments(item.id);
+    setCommentOpen(true);
   };
 
-  const handleLikeComment = (commentId) => {
-    setCommentsData((prev) => ({
-      ...prev,
-      [currentItemId]: prev[currentItemId].map((c) =>
-        c.id === commentId ? { ...c, likes: c.likes + 1 } : c
-      ),
-    }));
-  };
-
+  function formatDate(dateLost) {
+    const date = new Date(dateLost);
+    return date.toLocaleDateString("uz-UZ", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+  function capitalizeWords(str) {
+    if (!str) return "";
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  }
+  // Skeleton soni
+  const skeletons = Array.from({ length: 8 });
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography
-        variant="h4"
-        textAlign="center"
-        fontWeight="bold"
-        gutterBottom
-        color="primary"
-      >
-        Topilgan buyumlar
+    <Container
+      maxWidth="lg"
+      sx={{
+        mt: 4,
+        mb: 4,
+        position: "relative",
+      }}
+    >
+      {/* Agar loading bo‘lsa, orqa fon ustiga qoplama */}
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            bgcolor: "rgba(255,255,255,0.6)",
+            zIndex: 10,
+          }}
+        />
+      )}
+      {/* Sarlavha */}
+      <Typography variant="h4" component="h1" gutterBottom textAlign="center">
+        Topilgan Buyumlar
       </Typography>
 
-      <TextField
-        fullWidth
-        variant="outlined"
-        sx={{ mb: 3, backgroundColor: "#f9f9f9" }}
-        placeholder="Qidiruv..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
+      {/* Qidiruv */}
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
+        <TextField
+          label="Qidirish..."
+          variant="outlined"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ width: { xs: "100%", sm: 400 } }}
+        />
+      </Box>
 
+      {/* Vaqt bo‘yicha filter */}
       <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
         <ToggleButtonGroup
           value={selectedTimeFilter}
@@ -235,164 +301,214 @@ export default function LostItemsPage() {
         </ToggleButtonGroup>
       </Box>
 
-      <Grid container spacing={3}>
-        {filteredItems.map((item) => (
-          <Grid item xs={12} sm={6} md={4} key={item.id}>
-            <Card
-              sx={{
-                display: "flex",
-                maxWidth: "178px",
-                flexDirection: "column",
-                borderRadius: 3,
-                boxShadow: 3,
-                transition: "0.3s",
-                "&:hover": { boxShadow: 6 },
-              }}
-            >
-              <CardMedia
-                component="img"
-                height="180"
-                image={item.image}
-                alt={item.title}
-              />
-              <CardContent>
-                <Typography variant="h6" fontWeight="bold">
-                  {/* <PersonIcon />
-                  <FaceIcon /> */}
-                  <BadgeIcon />
-                  {item.fullName}
-                </Typography>
-                <Typography variant="h6" fontWeight="bold">
-                  {item.title}
-                </Typography>
-                <Divider color="primary" />
-                <Typography variant="body2" mt={1} color="text.secondary">
-                  {item.description}
-                </Typography>
-                <Typography variant="body2" mt={1}>
-                  <strong>Joy:</strong> {item.location}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Sana:</strong> {item.dateLost}
-                </Typography>
-                <Divider color="primary" />
-              </CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  px: 2,
-                  pb: 2,
-                }}
-              >
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="primary"
-                  sx={{ borderRadius: 20 }}
-                  onClick={() => openCommentsDrawer(item.id)}
-                  startIcon={<CommentIcon />}
-                >
-                  ({commentsCount[item.id]})
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  sx={{ borderRadius: 20 }}
-                  onClick={() =>
-                    setLikes((prev) => ({
-                      ...prev,
-                      [item.id]: prev[item.id] + 1,
-                    }))
-                  }
-                  startIcon={<ThumbUpIcon />}
-                >
-                  ({likes[item.id]})
-                </Button>
-              </Box>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      <Drawer
-        anchor="bottom"
-        open={drawerOpen}
-        onClose={closeCommentsDrawer}
-        PaperProps={{
-          sx: {
-            height: "60vh",
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            p: 3,
-            backgroundColor: "#fafafa",
-          },
-        }}
-      >
-        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <Typography variant="h6" fontWeight="bold">
-            Izohlar
-          </Typography>
-          <IconButton onClick={closeCommentsDrawer}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-
-        <Box sx={{ overflowY: "auto", maxHeight: "calc(60vh - 160px)", mb: 2 }}>
-          {currentItemId && commentsData[currentItemId]?.length > 0 ? (
-            commentsData[currentItemId].map((comment) => (
-              <Box
-                key={comment.id}
-                sx={{
-                  mb: 2,
-                  p: 2,
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  backgroundColor: "#fff",
-                }}
-              >
-                <Avatar sx={{ mr: 2 }}>{comment.user[0]}</Avatar>
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="body2" fontWeight="bold">
-                    {comment.user}
-                  </Typography>
-                  <Typography variant="body2" mb={0.5}>
-                    {comment.text}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {timeAgo(comment.createdAt)}
-                  </Typography>
-                </Box>
-                <IconButton onClick={() => handleLikeComment(comment.id)}>
-                  <ThumbUpIcon fontSize="small" />
-                  <Typography variant="caption" sx={{ ml: 0.5 }}>
-                    {comment.likes}
-                  </Typography>
-                </IconButton>
-              </Box>
+      {/* Buyumlar ro'yxati */}
+      <Grid container spacing={1}>
+        {loading
+          ? skeletons.map((_, i) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
+                <Card>
+                  <Skeleton variant="rectangular" height={140} />
+                  <CardContent>
+                    <Skeleton width="60%" height={28} />
+                    <Skeleton width="90%" />
+                    <Skeleton width="90%" />
+                  </CardContent>
+                </Card>
+              </Grid>
             ))
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              Hozircha izohlar yo'q.
-            </Typography>
-          )}
-        </Box>
+          : filteredItems.map((item) => (
+              <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
+                <Card
+                  sx={{
+                    display: "flex",
+                    maxWidth: "178px",
+                    height: 370,
+                    flexDirection: "column",
+                    borderRadius: 6,
+                    boxShadow: 5,
+                    transition: "0.3s",
 
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Izoh yozing..."
-            value={newCommentText}
-            onChange={(e) => setNewCommentText(e.target.value)}
-          />
-          <Button variant="contained" onClick={handleAddComment}>
-            Yuborish
-          </Button>
-        </Box>
-      </Drawer>
+                    "&:hover": { boxShadow: 2, color: "primary.main" },
+                  }}
+                >
+                  <Box margin={1} sx={{ flexGrow: 1 }}>
+                    <Box
+                      sx={{
+                        p: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <FaceIcon color="primary" />
+                      <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                        {item.fullName.toUpperCase()}
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        width: 150,
+                        height: 120,
+                        overflow: "hidden",
+                        px: 1,
+                      }}
+                    >
+                      <CardMedia
+                        component="img"
+                        image={item.image}
+                        alt={item.title}
+                        sx={{
+                          width: "100%",
+                          borderRadius: 3,
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </Box>
+                    <CardContent
+                      sx={{
+                        flexGrow: 1,
+                        p: 2,
+                        px: 1,
+                        transition: "filter 0.3s",
+                        filter: loading ? "blur(4px)" : "none",
+                      }}
+                    >
+                      <Typography variant="subtitle2" fontWeight="bold" noWrap>
+                        {item.title.toUpperCase()}
+                      </Typography>
+                      <Typography variant="body2" color="black" noWrap>
+                        {capitalizeWords(item.description)}
+                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          color="black"
+                          fontWeight={"bold"}
+                          mt={2}
+                          px={-2}
+                          noWrap
+                        >
+                          <LocationOnIcon />
+                          {capitalizeWords(item.location)}
+                        </Typography>
+                      </Box>
+                      <Box display="flex" justifyContent="end">
+                        {" "}
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          noWrap
+                        >
+                          {formatDate(item.dateLost)}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+
+                    <Box
+                      sx={{
+                        pb: 1,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 0,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDetailOpen(item)}
+                      >
+                        <InfoIcon color="primary" fontSize="medium" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleContact(item)}
+                      >
+                        <PhoneIcon color="primary" fontSize="medium" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleLike(item.id)}
+                      >
+                        <FavoriteBorderIcon
+                          fontSize="small"
+                          color={item.isLiked ? "primary" : "inherit"}
+                        />
+                        <Typography variant="caption" ml={0.3}>
+                          {item.likeCount}
+                        </Typography>
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          openComments(item);
+                          setCommentOpen(true);
+                        }}
+                      >
+                        {/* <FeedbackIcon /> */}
+                        <QuestionAnswerIcon color="primary" />
+                        {/* <CommentIcon fontSize="small" /> */}
+                      </IconButton>
+                    </Box>
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
+
+        {filteredItems.length === 0 && (
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 4 }}>
+            Hech narsa topilmadi.
+          </Typography>
+        )}
+      </Grid>
+      <CommentDrawer
+        open={commentOpen}
+        onClose={() => setCommentOpen(false)}
+        onSubmit={(text) => handleCommentSubmit(text, selectedItem?.id)}
+        currentItemId={selectedItem?.id}
+        commentsData={commentsData}
+        fetchComments={fetchComments}
+      />
+      {/* Dialog */}
+      <Dialog open={openDialog} onClose={handleDetailClose}>
+        <DialogTitle>{selectedItem?.title}</DialogTitle>
+        <DialogContent>
+          {selectedItem && (
+            <>
+              <Box
+                component="img"
+                src={selectedItem.image}
+                alt={selectedItem.title}
+                sx={{
+                  width: "100%",
+                  height: 200,
+                  objectFit: "cover",
+                  borderRadius: 1,
+                  mb: 2,
+                }}
+              />
+              <DialogContentText>{selectedItem.description}</DialogContentText>
+              <DialogContentText sx={{ mt: 1 }}>
+                <strong>Viloyat</strong> {selectedItem.region}
+              </DialogContentText>
+              <DialogContentText sx={{ mt: 1 }}>
+                <strong>Tuman</strong> {selectedItem.district}
+              </DialogContentText>
+              <DialogContentText sx={{ mt: 1 }}>
+                <strong>Joy:</strong> {selectedItem.location}
+              </DialogContentText>
+              <DialogContentText>
+                <strong>Sana:</strong> {selectedItem.dateLost}
+              </DialogContentText>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDetailClose}>Yopish</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

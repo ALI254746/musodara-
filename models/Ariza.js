@@ -22,6 +22,8 @@ const ArizaSchema = new mongoose.Schema(
     date: String,
     status: String,
     location: String,
+    region: { type: String, required: true },
+    district: { type: String, required: true },
     image: ImageSchema, // bu yerda image nested schema sifatida
     likeCount: {
       type: Number,

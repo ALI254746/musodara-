@@ -106,7 +106,7 @@ const CommentDrawer = ({
                   {timeAgo(comment.updatedAt)}
                 </Typography>
               </Box>
-              <IconButton onClick={() => handleLikeComment(comment.id)}>
+              <IconButton>
                 <ThumbUpIcon fontSize="small" />
               </IconButton>
             </Box>

@@ -1,6 +1,6 @@
 // app/ariza/page.jsx
 "use client";
-
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import submitAriza from "@/lib/submitariza";
 import {
   Container,
@@ -50,6 +50,8 @@ function LostFoundStepperForm() {
       date: Yup.string().required("Sana majburiy"),
       status: Yup.string().required("Topildi yoki Yo'qoldi tanlanishi kerak"),
       location: Yup.string().required("Joy majburiy"),
+      region: Yup.string().required("Viloyat majburiy"), // ✅ Yangi
+      district: Yup.string().required("Tuman majburiy"),
       image: Yup.mixed().required("Rasm majburiy"),
     }),
     onSubmit: async (values, { resetForm }) => {
@@ -93,6 +95,13 @@ function LostFoundStepperForm() {
       formik.setFieldValue("image", file);
       setSelectedImage(URL.createObjectURL(file));
     }
+  };
+  const regions = {
+    Toshkent: ["Yunusobod", "Chilonzor", "Mirzo Ulug'bek", "Yakkasaroy"],
+    Samarqand: ["Urgut", "Kattaqo'rg'on", "Bulung'ur"],
+    "Farg‘ona": ["Oltiariq", "Qo‘qon", "Marg‘ilon"],
+    Andijon: ["Asaka", "Shahrixon", "Andijon shahri"],
+    Buxoro: ["G‘ijduvon", "Vobkent", "Buxoro shahri"],
   };
 
   return (
@@ -139,21 +148,81 @@ function LostFoundStepperForm() {
               value={formik.values.email}
               onChange={formik.handleChange}
             />
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="region-label">Viloyat</InputLabel>
+              <Select
+                labelId="region-label"
+                name="region"
+                value={formik.values.region || ""}
+                onChange={(e) => {
+                  const selectedRegion = e.target.value;
+                  formik.setFieldValue("region", selectedRegion);
+                  formik.setFieldValue("district", ""); // eski tuman qiymatini tozalaymiz
+                }}
+                error={formik.touched.region && Boolean(formik.errors.region)}
+              >
+                {Object.keys(regions).map((region) => (
+                  <MenuItem key={region} value={region}>
+                    {region}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl
+              fullWidth
+              margin="normal"
+              disabled={!formik.values.region}
+            >
+              <InputLabel id="district-label">Tuman</InputLabel>
+              <Select
+                labelId="district-label"
+                name="district"
+                value={formik.values.district || ""}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.district && Boolean(formik.errors.district)
+                }
+              >
+                {formik.values.region &&
+                  regions[formik.values.region].map((district) => (
+                    <MenuItem key={district} value={district}>
+                      {district}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
           </>
         )}
 
         {activeStep === 1 && (
           <>
-            <TextField
+            <FormControl
               fullWidth
-              label="Buyum turi"
-              name="itemType"
-              margin="normal"
-              value={formik.values.itemType}
-              onChange={formik.handleChange}
               error={formik.touched.itemType && Boolean(formik.errors.itemType)}
-              helperText={formik.touched.itemType && formik.errors.itemType}
-            />
+            >
+              <InputLabel id="buyum-turi-label">Buyum turi</InputLabel>
+              <Select
+                fullWidth
+                label="Buyum turi"
+                name="itemType"
+                margin="normal"
+                value={formik.values.itemType}
+                onChange={formik.handleChange}
+              >
+                <MenuItem value="Telefon">Telefon</MenuItem>
+                <MenuItem value="Noutbuk">Noutbuk</MenuItem>
+                <MenuItem value="Pasport">Pasport</MenuItem>
+                <MenuItem value="Sumka">Sumka</MenuItem>
+                <MenuItem value="Kalit">Kalit</MenuItem>
+                <MenuItem value="Boshqa">Plastik Karta</MenuItem>
+                <MenuItem value="Boshqa">Boshqa</MenuItem>
+              </Select>
+              {formik.touched.itemType && formik.errors.itemType && (
+                <FormHelperText>{formik.errors.itemType}</FormHelperText>
+              )}
+            </FormControl>
+
             <TextField
               fullWidth
               multiline

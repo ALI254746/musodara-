@@ -1,9 +1,12 @@
 // app/layout.jsx
+import "./globals.css";
+import { Oswald } from "next/font/google";
+import Providers from "./providers";
 
-import { Inter } from "next/font/google";
-
-const inter = Inter({ subsets: ["latin"] });
-
+const oswald = Oswald({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
 export const metadata = {
   title: "Your App",
   description: "Description",
@@ -12,7 +15,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={oswald.className}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

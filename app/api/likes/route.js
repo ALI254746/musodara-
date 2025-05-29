@@ -93,7 +93,7 @@ export async function POST(req) {
       );
     }
   } catch (error) {
-    console.error("Like POST xatolik:", error);
+    console.log("Like POST xatolik:", error);
     return NextResponse.json({ error: "Xatolik yuz berdi" }, { status: 500 });
   }
 }

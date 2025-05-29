@@ -30,7 +30,7 @@ const DrawerMenu = ({ drawerOpen, handleDrawerClose }) => {
   const drawerItems = [
     {
       label: "Asosiy sahifa",
-      href: "/",
+      href: "/mainpage",
       icon: <HomeIcon color="info" />,
     },
     {
@@ -74,10 +74,15 @@ const DrawerMenu = ({ drawerOpen, handleDrawerClose }) => {
   return (
     <Drawer anchor="left" open={drawerOpen} onClose={handleDrawerClose}>
       <Box
-        sx={{ width: 250 }}
         role="presentation"
         onClick={handleDrawerClose}
         onKeyDown={handleDrawerClose}
+        sx={{
+          backgroundImage: "url('/menubar.png')",
+          backgroundSize: "cover",
+          height: "100vh",
+          fontWeight: 700,
+        }}
       >
         {/* Drawer yopish tugmasi */}
         <Box sx={{ display: "flex", justifyContent: "flex-end", p: 1 }}>
@@ -91,6 +96,24 @@ const DrawerMenu = ({ drawerOpen, handleDrawerClose }) => {
                 component={NextLink}
                 href={href}
                 selected={pathname === href}
+                sx={{
+                  "&.Mui-selected": {
+                    // HEX kod
+                    backgroundColor: "rgba(0, 150, 136, 0.5)", // Tanlangan holatdagi rang
+                    borderRadius: 6,
+                    fontWeight: 700,
+                    // RGBA — soya bilan
+                    // RGBA — soya bilan
+                  },
+                  "&.Mui-selected:hover": {
+                    backgroundColor: "#e1f5fe", // Hover holatidagi rang
+                  },
+                  "&:hover": {
+                    backgroundColor: "rgba(38, 166, 154, 0.5)",
+                    borderRadius: 6, // Hover holatidagi rang
+                  },
+                }}
+                onClick={handleDrawerClose}
               >
                 <ListItemIcon>{icon}</ListItemIcon>
                 <ListItemText primary={label} />

@@ -94,7 +94,7 @@ export async function PATCH(req) {
       },
     });
   } catch (error) {
-    console.error("PATCH xato:", error);
+    console.log("PATCH xato:", error);
     return NextResponse.json({ error: "Ichki server xatosi" }, { status: 500 });
   }
 }

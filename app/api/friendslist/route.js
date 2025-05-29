@@ -5,7 +5,7 @@ import User from "@/models/User";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-export async function GET(req) {
+export async function GET(_) {
   await dbConnect();
 
   try {

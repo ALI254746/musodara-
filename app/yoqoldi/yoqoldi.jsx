@@ -11,6 +11,8 @@ import {
   CardContent,
   Typography,
   Button,
+  Divider,
+  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -19,10 +21,22 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from "@mui/material";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import EventIcon from "@mui/icons-material/Event";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import PhoneIcon from "@mui/icons-material/Phone";
+
+import FeedbackIcon from "@mui/icons-material/Feedback";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import CommentIcon from "@mui/icons-material/Comment";
 import ChatIcon from "@mui/icons-material/Chat";
-import InfoIcon from "@mui/icons-material/Info"; // Detail uchun
+import InfoIcon from "@mui/icons-material/Info";
+import FaceIcon from "@mui/icons-material/Face";
+import LocationOnIcon from "@mui/icons-material/LocationOn"; // Detail uchun
 export default function LostItemsPage() {
   const [items, setItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -205,6 +219,22 @@ export default function LostItemsPage() {
     setCommentOpen(true);
   };
 
+  function formatDate(dateLost) {
+    const date = new Date(dateLost);
+    return date.toLocaleDateString("uz-UZ", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+  function capitalizeWords(str) {
+    if (!str) return "";
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  }
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom textAlign="center">
@@ -238,93 +268,120 @@ export default function LostItemsPage() {
       </Box>
 
       {/* Buyumlar ro'yxati */}
-      <Grid container spacing={4} justifyContent="center">
+      <Grid container spacing={1}>
         {filteredItems.map((item) => (
           <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
             <Card
               sx={{
-                height: "100%",
                 display: "flex",
+                maxWidth: "178px",
+                height: 370,
                 flexDirection: "column",
-                justifyContent: "space-between",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                "&:hover": {
-                  transform: "scale(1.03)",
-                  boxShadow: 6,
-                },
-                width: "100%",
-                maxWidth: 345,
+                borderRadius: 6,
+                boxShadow: 5,
+                transition: "0.3s",
+
+                "&:hover": { boxShadow: 2, color: "primary.main" },
               }}
             >
-              <CardMedia
-                component="img"
-                image={item.image}
-                alt={item.title}
-                height="200"
-                sx={{ objectFit: "cover" }}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  {/* <PersonIcon />
-                  <FaceIcon /> */}
-
-                  {item.fullName}
-                </Typography>
-                <Typography gutterBottom variant="h6">
-                  {item.title}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  mb={1}
-                  noWrap
+              <Box margin={1} sx={{ flexGrow: 1 }}>
+                <Box
+                  sx={{ p: 2, display: "flex", alignItems: "center", gap: 1 }}
                 >
-                  {item.description}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={0.5}>
-                  <strong>Joy:</strong> {item.location}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Sana:</strong> {item.dateLost}
-                </Typography>
-              </CardContent>
+                  <FaceIcon color="primary" />
+                  <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                    {item.fullName.toUpperCase()}
+                  </Typography>
+                </Box>
 
-              <Box sx={{ p: 2, display: "flex", gap: 1 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  onClick={() => handleDetailOpen(item)}
-                  startIcon={<InfoIcon />}
-                ></Button>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  fullWidth
-                  onClick={() => handleContact(item)}
-                  startIcon={<ChatIcon />}
-                ></Button>
-                <Button
-                  size="small"
-                  variant={item.isLiked ? "contained" : "outlined"}
-                  sx={{ borderRadius: 20 }}
-                  onClick={() => handleLike(item.id)}
-                  startIcon={<ThumbUpIcon />}
-                >
-                  {" "}
-                  <Typography ml={0.5}>{item.likeCount}</Typography>
-                </Button>
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="primary"
-                  sx={{ borderRadius: 20 }}
-                  onClick={() => {
-                    openComments(item);
-                    setCommentOpen(true);
+                <Box
+                  sx={{
+                    width: 150,
+                    height: 120,
+                    overflow: "hidden",
+                    px: 1,
                   }}
-                  startIcon={<CommentIcon />}
-                ></Button>
+                >
+                  <CardMedia
+                    component="img"
+                    image={item.image}
+                    alt={item.title}
+                    sx={{
+                      width: "100%",
+                      borderRadius: 3,
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </Box>
+                <CardContent sx={{ flexGrow: 1, p: 2, px: 1 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" noWrap>
+                    {item.title.toUpperCase()}
+                  </Typography>
+                  <Typography variant="body2" color="black" noWrap>
+                    {capitalizeWords(item.description)}
+                  </Typography>
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      color="black"
+                      fontWeight={"bold"}
+                      mt={2}
+                      px={-2}
+                      noWrap
+                    >
+                      <LocationOnIcon />
+                      {capitalizeWords(item.location)}
+                    </Typography>
+                  </Box>
+                  <Box display="flex" justifyContent="end">
+                    {" "}
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      {formatDate(item.dateLost)}
+                    </Typography>
+                  </Box>
+                </CardContent>
+
+                <Box
+                  sx={{
+                    pb: 1,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 0,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDetailOpen(item)}
+                  >
+                    <InfoIcon color="primary" fontSize="medium" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleContact(item)}>
+                    <PhoneIcon color="primary" fontSize="medium" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleLike(item.id)}>
+                    <FavoriteBorderIcon
+                      fontSize="small"
+                      color={item.isLiked ? "primary" : "inherit"}
+                    />
+                    <Typography variant="caption" ml={0.3}>
+                      {item.likeCount}
+                    </Typography>
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      openComments(item);
+                      setCommentOpen(true);
+                    }}
+                  >
+                    {/* <FeedbackIcon /> */}
+                    <QuestionAnswerIcon color="primary" />
+                    {/* <CommentIcon fontSize="small" /> */}
+                  </IconButton>
+                </Box>
               </Box>
             </Card>
           </Grid>

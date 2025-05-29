@@ -33,7 +33,7 @@ export async function GET(request) {
     console.log(applications);
     return NextResponse.json({ applications }, { status: 200 });
   } catch (error) {
-    console.error("arizani olishda xatolik", error);
+    console.log("arizani olishda xatolik", error);
     return NextResponse.json({ error: "Ichki server xatosi" }, { status: 500 });
   }
 }
