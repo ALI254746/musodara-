@@ -5,24 +5,29 @@ import { NextResponse } from "next/server";
 export async function PUT(request, { params }) {
   try {
     await connectMongo();
-    params = await params;
+
     const { id: notificationId } = params;
-    const body = await request.json();
-    const { userId } = body;
-    console.log("notificationId:", notificationId);
-    console.log("userId:", userId);
+    const { userId } = await request.json();
+
+    if (!userId || !notificationId) {
+      return NextResponse.json(
+        { error: "userId yoki notificationId yo'q" },
+        { status: 400 }
+      );
+    }
+
     const result = await UserModel.updateOne(
       { _id: userId, "notifications._id": notificationId },
       {
         $set: {
-          "notifications.$.read": true, // O'qilgan deb belgilash
+          "notifications.$.read": true,
         },
       }
     );
 
     if (result.modifiedCount === 0) {
       return NextResponse.json(
-        { error: "Bildirishnoma topilmadi yoki yangilanmadi" },
+        { error: "Bildirishnoma topilmadi yoki allaqachon o'qilgan" },
         { status: 404 }
       );
     }
@@ -31,6 +36,10 @@ export async function PUT(request, { params }) {
       message: "Bildirishnoma o'qilgan deb belgilandi",
     });
   } catch (error) {
-    return NextResponse.json({ error: "Xatolik yuz berdi" }, { status: 500 });
+    console.error("PUT /api/notification xatolik:", error);
+    return NextResponse.json(
+      { error: "Server xatosi yuz berdi" },
+      { status: 500 }
+    );
   }
 }

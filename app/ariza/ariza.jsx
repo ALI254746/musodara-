@@ -1,6 +1,12 @@
 // app/ariza/page.jsx
 "use client";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+} from "@mui/material";
 import submitAriza from "@/lib/submitariza";
 import {
   Container,
@@ -40,6 +46,8 @@ function LostFoundStepperForm() {
       date: "",
       status: "topildi",
       location: "",
+      region: "",
+      district: "",
       image: null,
     },
     validationSchema: Yup.object({
@@ -50,7 +58,7 @@ function LostFoundStepperForm() {
       date: Yup.string().required("Sana majburiy"),
       status: Yup.string().required("Topildi yoki Yo'qoldi tanlanishi kerak"),
       location: Yup.string().required("Joy majburiy"),
-      region: Yup.string().required("Viloyat majburiy"), // ✅ Yangi
+      region: Yup.string().required("Viloyat majburiy"),
       district: Yup.string().required("Tuman majburiy"),
       image: Yup.mixed().required("Rasm majburiy"),
     }),
@@ -96,6 +104,7 @@ function LostFoundStepperForm() {
       setSelectedImage(URL.createObjectURL(file));
     }
   };
+
   const regions = {
     Toshkent: ["Yunusobod", "Chilonzor", "Mirzo Ulug'bek", "Yakkasaroy"],
     Samarqand: ["Urgut", "Kattaqo'rg'on", "Bulung'ur"],
@@ -148,7 +157,11 @@ function LostFoundStepperForm() {
               value={formik.values.email}
               onChange={formik.handleChange}
             />
-            <FormControl fullWidth margin="normal">
+            <FormControl
+              fullWidth
+              margin="normal"
+              error={formik.touched.region && Boolean(formik.errors.region)}
+            >
               <InputLabel id="region-label">Viloyat</InputLabel>
               <Select
                 labelId="region-label"
@@ -167,12 +180,16 @@ function LostFoundStepperForm() {
                   </MenuItem>
                 ))}
               </Select>
+              {formik.touched.region && formik.errors.region && (
+                <FormHelperText>{formik.errors.region}</FormHelperText>
+              )}
             </FormControl>
 
             <FormControl
               fullWidth
               margin="normal"
               disabled={!formik.values.region}
+              error={formik.touched.district && Boolean(formik.errors.district)}
             >
               <InputLabel id="district-label">Tuman</InputLabel>
               <Select
@@ -191,6 +208,9 @@ function LostFoundStepperForm() {
                     </MenuItem>
                   ))}
               </Select>
+              {formik.touched.district && formik.errors.district && (
+                <FormHelperText>{formik.errors.district}</FormHelperText>
+              )}
             </FormControl>
           </>
         )}
@@ -199,6 +219,7 @@ function LostFoundStepperForm() {
           <>
             <FormControl
               fullWidth
+              margin="normal"
               error={formik.touched.itemType && Boolean(formik.errors.itemType)}
             >
               <InputLabel id="buyum-turi-label">Buyum turi</InputLabel>
@@ -206,16 +227,16 @@ function LostFoundStepperForm() {
                 fullWidth
                 label="Buyum turi"
                 name="itemType"
-                margin="normal"
                 value={formik.values.itemType}
                 onChange={formik.handleChange}
+                labelId="buyum-turi-label"
               >
                 <MenuItem value="Telefon">Telefon</MenuItem>
                 <MenuItem value="Noutbuk">Noutbuk</MenuItem>
                 <MenuItem value="Pasport">Pasport</MenuItem>
                 <MenuItem value="Sumka">Sumka</MenuItem>
                 <MenuItem value="Kalit">Kalit</MenuItem>
-                <MenuItem value="Boshqa">Plastik Karta</MenuItem>
+                <MenuItem value="Plastik Karta">Plastik Karta</MenuItem>
                 <MenuItem value="Boshqa">Boshqa</MenuItem>
               </Select>
               {formik.touched.itemType && formik.errors.itemType && (
@@ -338,9 +359,12 @@ function LostFoundStepperForm() {
   );
 }
 
-export default function LostFoundPage() {
+export default function Ariza() {
   return (
-    <SnackbarProvider maxSnack={3}>
+    <SnackbarProvider
+      maxSnack={3}
+      anchorOrigin={{ vertical: "top", horizontal: "right" }}
+    >
       <LostFoundStepperForm />
     </SnackbarProvider>
   );

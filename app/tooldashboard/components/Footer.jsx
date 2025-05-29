@@ -1,6 +1,6 @@
 "use client";
 import { Box, Container, Typography, Button, Stack } from "@mui/material";
-
+import NextLink from "next/link";
 const Footer = () => {
   return (
     <Box sx={{ backgroundColor: "#f5f5f5", py: 4, mt: 5 }}>
@@ -12,7 +12,13 @@ const Footer = () => {
           <Typography variant="body2" color="text.secondary" align="center">
             Biz bilan bog'laning: info@mywebsite.com
           </Typography>
-          <Button variant="contained" color="primary" size="small">
+          <Button
+            variant="contained"
+            color="primary"
+            component={NextLink}
+            href="/mainpage"
+            size="small"
+          >
             Bosh sahifaga qaytish
           </Button>
         </Stack>

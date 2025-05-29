@@ -1,15 +1,17 @@
 // app/api/users/route.js
+
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import User from "@/models/User"; // model nomi sizda qanday bo‘lsa, shunga qarab
+import User from "@/models/User";
 
 export async function GET() {
   try {
-    await connectDB(); // MongoDBga ulanish
+    await connectDB();
 
-    const users = await User.find({}, { password: 0 }); // Parolni chiqarilmasin
+    const users = await User.find({}, { password: 0 }); // Parolni qaytarmaslik
     return NextResponse.json({ success: true, users });
   } catch (error) {
+    console.error("GET /api/users xatosi:", error.message);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

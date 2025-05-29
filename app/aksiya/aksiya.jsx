@@ -104,7 +104,14 @@ export default function PromoPage() {
                 <Button
                   size="small"
                   variant="contained"
-                  onClick={() => navigator.clipboard.writeText(promo.code)}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(promo.code);
+                      alert("Kod nusxalandi!");
+                    } catch (err) {
+                      alert("Kod nusxalanmadi: " + err.message);
+                    }
+                  }}
                 >
                   Kodni nusxalash
                 </Button>

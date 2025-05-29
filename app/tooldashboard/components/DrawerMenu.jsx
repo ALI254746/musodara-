@@ -68,7 +68,6 @@ const DrawerMenu = ({ drawerOpen, handleDrawerClose }) => {
       href: "/rating",
       icon: <EmojiEventsIcon sx={{ color: "gold" }} />,
     },
-    { label: "globus", href: "/globus" },
   ];
 
   return (

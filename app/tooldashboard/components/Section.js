@@ -35,7 +35,7 @@ const HeroSection = () => {
           Xush kelibsiz! Biz bilan yangiliklarni kashf eting!
         </Typography>
         <Typography variant="h5" sx={{ marginBottom: 3 }}>
-          Saytingizning maqsadi haqida qisqacha ma'lumot.
+          Saytingizning maqsadi haqida qisqacha mal&apos;umot.
         </Typography>
       </Container>
     </Box>
@@ -120,7 +120,7 @@ const CallToAction = () => {
         Bizning imkoniyatlarimiz haqida ko‘proq bilib oling!
       </Typography>
       <Button variant="contained" color="secondary" size="large">
-        Ma'lumot olish
+        Ma&apos;lumot olish
       </Button>
     </Box>
   );
@@ -147,17 +147,17 @@ const ServiceTabs = () => {
       <Box sx={{ padding: 3 }}>
         {value === 0 && (
           <Typography variant="body1">
-            Xizmat 1 haqida batafsil ma'lumot.
+            Xizmat 1 haqida batafsil ma&apos;lumot.
           </Typography>
         )}
         {value === 1 && (
           <Typography variant="body1">
-            Xizmat 2 haqida batafsil ma'lumot.
+            Xizmat 2 haqida batafsil ma&apos;lumot.
           </Typography>
         )}
         {value === 2 && (
           <Typography variant="body1">
-            Xizmat 3 haqida batafsil ma'lumot.
+            Xizmat 3 haqida batafsil ma&apos;lumot.
           </Typography>
         )}
       </Box>
