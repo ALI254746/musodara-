@@ -97,8 +97,7 @@ export async function POST(req) {
     }
 
     return NextResponse.json(comment, { status: 201 });
-  } catch (error) {
-    console.error("Xatolik:", error);
+  } catch {
     return NextResponse.json({ error: "Xatolik yuz berdi" }, { status: 400 });
   }
 }

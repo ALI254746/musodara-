@@ -117,8 +117,7 @@ export async function POST(request) {
       }),
       { status: 201 }
     );
-  } catch (error) {
-    console.error("❌ [POST Xatolik]:", error);
+  } catch {
     return new Response(JSON.stringify({ error: "Xatolik yuz berdi" }), {
       status: 500,
     });

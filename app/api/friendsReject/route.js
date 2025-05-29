@@ -22,8 +22,7 @@ export async function POST(req) {
     });
 
     return NextResponse.json({ success: true, message: "So‘rov rad etildi" });
-  } catch (error) {
-    console.error("Rad etishda xatolik:", error);
+  } catch {
     return NextResponse.json(
       { success: false, message: "Server xatoligi" },
       { status: 500 }

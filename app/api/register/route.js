@@ -32,8 +32,7 @@ export async function POST(request) {
     await newUser.save();
 
     return NextResponse.json({ message: "User created" }, { status: 201 });
-  } catch (e) {
-    console.error("Registratsiya xatosi:", e);
+  } catch {
     return NextResponse.json(
       { error: "Ichki server xatosi yuz berdi" },
       { status: 500 }

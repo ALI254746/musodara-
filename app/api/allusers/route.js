@@ -10,8 +10,7 @@ export async function GET() {
 
     const users = await User.find({}, { password: 0 }); // Parolni qaytarmaslik
     return NextResponse.json({ success: true, users });
-  } catch (error) {
-    console.error("GET /api/users xatosi:", error.message);
+  } catch {
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

@@ -38,8 +38,7 @@ export async function GET(_) {
       friends: fullUser.friends,
       notifications: fullUser.notifications,
     });
-  } catch (error) {
-    console.error("Do‘stlar ro‘yxatini olishda xatolik:", error);
+  } catch {
     return NextResponse.json(
       { success: false, message: "Server xatoligi" },
       { status: 500 }

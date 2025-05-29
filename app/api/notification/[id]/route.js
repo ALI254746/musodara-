@@ -35,8 +35,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json({
       message: "Bildirishnoma o'qilgan deb belgilandi",
     });
-  } catch (error) {
-    console.error("PUT /api/notification xatolik:", error);
+  } catch {
     return NextResponse.json(
       { error: "Server xatosi yuz berdi" },
       { status: 500 }

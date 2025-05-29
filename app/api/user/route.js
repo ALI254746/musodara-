@@ -93,8 +93,7 @@ export async function PATCH(req) {
         avatar: updatedUser.avatar,
       },
     });
-  } catch (error) {
-    console.error("PATCH xato:", error);
+  } catch {
     return NextResponse.json({ error: "Ichki server xatosi" }, { status: 500 });
   }
 }
