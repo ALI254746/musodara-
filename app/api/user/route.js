@@ -1,3 +1,9 @@
+export const runtime = "nodejs"; // <-- MUHIM
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -7,11 +13,6 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server"; // <-- MUHIM
 import { getUserById } from "@/lib/userid";
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 // GET - token orqali foydalanuvchini olish
 export async function GET() {
@@ -26,6 +27,7 @@ export async function GET() {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log("Decoded JWT:", decoded);
     console.log("id", decoded.id);
+    await connectDB(); // <-- SHU YERGA QO‘SHING!
     const user = await getUserById(decoded.id);
     if (!user) {
       return NextResponse.json(
@@ -35,7 +37,8 @@ export async function GET() {
     }
 
     return NextResponse.json({ user });
-  } catch {
+  } catch (error) {
+    console.error("JWT verification error:", error);
     return NextResponse.json({ error: "Token noto‘g‘ri" }, { status: 401 });
   }
 }
@@ -93,7 +96,8 @@ export async function PATCH(req) {
         avatar: updatedUser.avatar,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("Xatolik:", error);
     return NextResponse.json({ error: "Ichki server xatosi" }, { status: 500 });
   }
 }
